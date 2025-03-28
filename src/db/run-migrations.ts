@@ -16,8 +16,8 @@ if (!connectionString) {
 async function runMigrations() {
   console.log('Starting SQL migrations...');
   
-  // Create neon client
-  const sql = neon(connectionString);
+  // Create neon client - connectionString is definitely not undefined at this point
+  const sql = neon(connectionString as string);
 
   // Get all migration files
   const migrationsDir = path.join(process.cwd(), 'migrations');
@@ -35,7 +35,7 @@ async function runMigrations() {
       const migration = fs.readFileSync(filePath, 'utf8');
       
       // Execute the migration using raw SQL
-      await sql(migration);
+      await sql.query(migration);
       
       console.log(`Successfully ran migration: ${file}`);
     } catch (error) {

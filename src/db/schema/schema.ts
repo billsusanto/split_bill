@@ -4,11 +4,8 @@ import {
   text,
   varchar,
   timestamp,
-  boolean,
-  foreignKey,
   integer,
   decimal,
-  json,
   primaryKey,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";

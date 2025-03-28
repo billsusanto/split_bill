@@ -1,7 +1,5 @@
 import { neon } from "@neondatabase/serverless";
 import * as dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
 
 // Load environment variables
 dotenv.config();

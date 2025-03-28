@@ -49,7 +49,7 @@ async function viewDatabaseContents() {
         totalAmount: bill.totalAmount,
         tripId: bill.tripId,
         addedById: bill.addedById,
-        // @ts-ignore - bill_type column exists but might not be in the TypeScript schema
+        // @ts-expect-error - bill_type column exists but might not be in the TypeScript schema
         billType: bill.bill_type || 'items',
         createdAt: bill.createdAt,
         updatedAt: bill.updatedAt

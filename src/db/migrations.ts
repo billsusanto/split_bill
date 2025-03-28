@@ -39,8 +39,14 @@ async function runMigration() {
 async function runMigrations() {
   console.log('Starting migrations...');
   
+  // Check for DATABASE_URL
+  if (!process.env.DATABASE_URL) {
+    console.error("DATABASE_URL environment variable is not set. Please set it and try again.");
+    return;
+  }
+  
   // Create neon client
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(process.env.DATABASE_URL as string);
 
   // Get all migration files
   const migrationsDir = path.join(process.cwd(), 'migrations');
@@ -58,7 +64,7 @@ async function runMigrations() {
       const migration = fs.readFileSync(filePath, 'utf8');
       
       // Execute the migration
-      await sql(migration);
+      await sql.query(migration);
       
       console.log(`Successfully ran migration: ${file}`);
     } catch (error) {
