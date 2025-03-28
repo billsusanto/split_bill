@@ -10,11 +10,11 @@ export default function Home() {
   const router = useRouter();
   
   // Redirect to dashboard if already signed in
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.push('/dashboard');
-    }
-  }, [isLoaded, isSignedIn, router]);
+  // useEffect(() => {
+  //   if (isLoaded && isSignedIn) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [isLoaded, isSignedIn, router]);
 
   return (
     <div className="min-h-screen flex flex-col">
