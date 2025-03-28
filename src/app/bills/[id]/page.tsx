@@ -19,11 +19,48 @@ import {
   assignUserToBill,
   removeUserFromBill,
   getUsersForBill,
-  getUserByName,
   createUser,
   getUserByClerkId,
   isUserInTrip
 } from '@/lib/db/utils';
+
+// Define interfaces for our data types
+interface Bill {
+  id: number;
+  name: string;
+  totalAmount: string;
+  tripId: number;
+  addedById: number;
+  billType: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Trip {
+  id: number;
+  name: string;
+  uniqueId: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface BillItem {
+  id: number;
+  name: string;
+  price: string;
+  quantity: number;
+  billId: number;
+  createdAt: Date;
+}
+
+interface User {
+  id: number;
+  name: string;
+  clerkId?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export default function BillDetail() {
   const { user, isLoaded } = useUser();
@@ -31,9 +68,9 @@ export default function BillDetail() {
   const router = useRouter();
   const billId = Number(params.id);
   
-  const [bill, setBill] = useState<any>(null);
-  const [trip, setTrip] = useState<any>(null);
-  const [billItems, setBillItems] = useState<any[]>([]);
+  const [bill, setBill] = useState<Bill | null>(null);
+  const [trip, setTrip] = useState<Trip | null>(null);
+  const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewItemForm, setShowNewItemForm] = useState(false);
   const [newItemName, setNewItemName] = useState('');
@@ -41,7 +78,7 @@ export default function BillDetail() {
   const [newItemQuantity, setNewItemQuantity] = useState('1');
   const [isCreatingItem, setIsCreatingItem] = useState(false);
   const [isDeletingItem, setIsDeletingItem] = useState<number | null>(null);
-  const [itemUsers, setItemUsers] = useState<Record<number, any[]>>({});
+  const [itemUsers, setItemUsers] = useState<Record<number, User[]>>({});
   const [userItems, setUserItems] = useState<number[]>([]);
   const [isTogglingItem, setIsTogglingItem] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<number | null>(null);
@@ -49,8 +86,7 @@ export default function BillDetail() {
   const [editItemPrice, setEditItemPrice] = useState('');
   const [editItemQuantity, setEditItemQuantity] = useState('1');
   const [isUpdatingItem, setIsUpdatingItem] = useState(false);
-  const [tripUsers, setTripUsers] = useState<any[]>([]);
-  const [evenSplitUsers, setEvenSplitUsers] = useState<any[]>([]);
+  const [evenSplitUsers, setEvenSplitUsers] = useState<User[]>([]);
   const [isTogglingEvenSplit, setIsTogglingEvenSplit] = useState(false);
   const [localUserId, setLocalUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +155,6 @@ export default function BillDetail() {
         setTrip(tripData);
         
         // For even split bills, get participating users
-        // @ts-ignore - billType is added in memory by the utilities
         if (billData.billType === 'even') {
           const billUsers = await getUsersForBill(billId);
           setEvenSplitUsers(billUsers);
@@ -134,7 +169,7 @@ export default function BillDetail() {
         setUserItems(userItemIds.map(item => item.id));
 
         // For each bill item, get the users who are paying for it
-        const usersMap: Record<number, any[]> = {};
+        const usersMap: Record<number, User[]> = {};
         for (const item of items) {
           const itemUsersList = await getUsersForBillItem(item.id);
           usersMap[item.id] = itemUsersList;
@@ -293,7 +328,7 @@ export default function BillDetail() {
   };
 
   // Start editing an item
-  const startEditingItem = (item: any) => {
+  const startEditingItem = (item: BillItem) => {
     setEditingItem(item.id);
     setEditItemName(item.name);
     setEditItemPrice(item.price.toString());
@@ -361,7 +396,7 @@ export default function BillDetail() {
       <div className="min-h-screen bg-gray-50">
         <NavBar />
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <p>Bill not found or you don't have access to this bill.</p>
+          <p>Bill not found or you don&apos;t have access to this bill.</p>
           <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             Return to Dashboard
           </Link>

@@ -12,11 +12,31 @@ import {
   getTripBills, 
   deleteBill, 
   getUserById, 
-  getUserByName, 
-  createUser,
   getUserByClerkId,
-  isUserInTrip
+  isUserInTrip,
+  createUser
 } from '@/lib/db/utils';
+
+// Define interfaces
+interface Trip {
+  id: number;
+  name: string;
+  uniqueId: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Bill {
+  id: number;
+  name: string;
+  totalAmount: string;
+  tripId: number;
+  addedById: number;
+  billType: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function TripDetail() {
   const { user, isSignedIn, isLoaded } = useUser();
@@ -24,8 +44,8 @@ export default function TripDetail() {
   const router = useRouter();
   const tripId = Number(params.id);
   
-  const [trip, setTrip] = useState<any>(null);
-  const [bills, setBills] = useState<any[]>([]);
+  const [trip, setTrip] = useState<Trip | null>(null);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewBillForm, setShowNewBillForm] = useState(false);
   const [newBillName, setNewBillName] = useState('');
@@ -147,7 +167,7 @@ export default function TripDetail() {
   };
 
   // Handle edit bill mode
-  const startEditingBill = (bill: any) => {
+  const startEditingBill = (bill: Bill) => {
     setEditingBill(bill.id);
     setEditBillName(bill.name);
     setEditBillAmount(bill.totalAmount.toString());

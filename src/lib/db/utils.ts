@@ -31,7 +31,12 @@ export async function createUser(name: string, clerkId?: string) {
       }
     }
     
-    const userData: any = { 
+    const userData: { 
+      name: string;
+      createdAt: Date;
+      updatedAt: Date;
+      clerkId?: string;
+    } = { 
       name,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -210,7 +215,12 @@ export async function updateBill(id: number, name: string, totalAmount: number, 
   const db = await getDb();
   
   // Now we can use the billType field directly
-  const updateData: any = {
+  const updateData: {
+    name: string;
+    totalAmount: string;
+    updatedAt: Date;
+    billType?: string;
+  } = {
     name,
     totalAmount: totalAmount.toString(), // Convert to string for Drizzle decimal type
     updatedAt: new Date()

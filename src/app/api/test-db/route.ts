@@ -22,18 +22,21 @@ export async function GET() {
         hasConnection: !!db,
       }
     });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Database connection error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     
     return NextResponse.json({
       success: false,
       message: 'Database connection failed',
-      error: error.message,
+      error: errorMessage,
       env: {
         databaseUrl: process.env.DATABASE_URL ? `Set (${process.env.DATABASE_URL.substring(0, 30)}...)` : 'Not set',
         nodeEnv: process.env.NODE_ENV,
       },
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
     }, { status: 500 });
   }
 } 

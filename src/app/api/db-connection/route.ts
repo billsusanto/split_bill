@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "@/db/schema/schema";
+// Removing unused imports
+// import { drizzle } from "drizzle-orm/neon-http";
+// import * as schema from "@/db/schema/schema";
 
 // This is a server component that will run on the server
 export async function GET() {
@@ -22,7 +23,6 @@ export async function GET() {
     
     // Test the connection
     const sql = neon(connectionString);
-    const db = drizzle(sql, { schema });
     
     // Try a simple query
     const result = await sql`SELECT 1 as test`;

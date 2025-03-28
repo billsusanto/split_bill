@@ -4,26 +4,42 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import NavBar from '@/components/NavBar';
-import { getUserTrips, createTrip, joinTrip, createUser, getUserByName, getUserByClerkId } from '@/lib/db/utils';
+import { 
+  getUserTrips, 
+  createTrip, 
+  joinTrip, 
+  createUser,
+  getUserByClerkId
+} from '@/lib/db/utils';
 import Link from 'next/link';
+
+// Define interfaces
+interface Trip {
+  id: number;
+  name: string;
+  uniqueId: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   
-  const [trips, setTrips] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showNewTripForm, setShowNewTripForm] = useState(false);
-  const [showJoinTripForm, setShowJoinTripForm] = useState(false);
-  const [newTripName, setNewTripName] = useState('');
-  const [newTripPassword, setNewTripPassword] = useState('');
-  const [joinTripId, setJoinTripId] = useState('');
-  const [joinTripPassword, setJoinTripPassword] = useState('');
-  const [isCreatingTrip, setIsCreatingTrip] = useState(false);
-  const [isJoiningTrip, setIsJoiningTrip] = useState(false);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [tripName, setTripName] = useState('');
+  const [tripPassword, setTripPassword] = useState('');
+  const [tripId, setTripId] = useState('');
+  const [joinPassword, setJoinPassword] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [localUserId, setLocalUserId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dbStatus, setDbStatus] = useState<{success: boolean, message: string} | null>(null);
-  const [localUserId, setLocalUserId] = useState<number | null>(null);
 
   // Check database connection
   useEffect(() => {
@@ -91,20 +107,21 @@ export default function Dashboard() {
       if (!user || !localUserId) return;
 
       if (!dbStatus?.success) {
-        setIsLoading(false);
+        setLoading(false);
         return;
       }
       
-      setIsLoading(true);
+      setLoading(true);
       try {
         // Use the local user ID from our database
         const userTrips = await getUserTrips(localUserId);
         setTrips(userTrips);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error fetching trips:', error);
-        setError(`Failed to load trips: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setError(`Failed to load trips: ${errorMessage}`);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -115,32 +132,32 @@ export default function Dashboard() {
 
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !localUserId || !newTripName.trim() || !newTripPassword.trim()) return;
+    if (!user || !localUserId || !tripName.trim() || !tripPassword.trim()) return;
 
-    setIsCreatingTrip(true);
+    setIsCreating(true);
     setError(null);
     try {
-      const trip = await createTrip(newTripName, newTripPassword, localUserId);
+      const trip = await createTrip(tripName, tripPassword, localUserId);
       setTrips((prev) => [...prev, trip]);
-      setNewTripName('');
-      setNewTripPassword('');
-      setShowNewTripForm(false);
+      setTripName('');
+      setTripPassword('');
+      setShowCreateForm(false);
     } catch (error) {
       console.error('Error creating trip:', error);
       setError('Failed to create trip');
     } finally {
-      setIsCreatingTrip(false);
+      setIsCreating(false);
     }
   };
 
   const handleJoinTrip = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !localUserId || !joinTripId.trim() || !joinTripPassword.trim()) return;
+    if (!user || !localUserId || !tripId.trim() || !joinPassword.trim()) return;
 
-    setIsJoiningTrip(true);
+    setIsJoining(true);
     setError(null);
     try {
-      const result = await joinTrip(localUserId, joinTripId, joinTripPassword);
+      const result = await joinTrip(localUserId, tripId, joinPassword);
       
       if (result.success && result.trip) {
         setTrips((prev) => {
@@ -151,9 +168,9 @@ export default function Dashboard() {
           }
           return prev;
         });
-        setJoinTripId('');
-        setJoinTripPassword('');
-        setShowJoinTripForm(false);
+        setTripId('');
+        setJoinPassword('');
+        setShowJoinForm(false);
       } else {
         setError(result.message || 'Failed to join trip');
       }
@@ -161,7 +178,7 @@ export default function Dashboard() {
       console.error('Error joining trip:', error);
       setError('Failed to join trip');
     } finally {
-      setIsJoiningTrip(false);
+      setIsJoining(false);
     }
   };
 
@@ -184,21 +201,21 @@ export default function Dashboard() {
             <div className="flex space-x-2">
               <button
                 onClick={() => {
-                  setShowNewTripForm(!showNewTripForm);
-                  setShowJoinTripForm(false);
+                  setShowCreateForm(!showCreateForm);
+                  setShowJoinForm(false);
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                {showNewTripForm ? 'Cancel' : 'New Trip'}
+                {showCreateForm ? 'Cancel' : 'New Trip'}
               </button>
               <button
                 onClick={() => {
-                  setShowJoinTripForm(!showJoinTripForm);
-                  setShowNewTripForm(false);
+                  setShowJoinForm(!showJoinForm);
+                  setShowCreateForm(false);
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                {showJoinTripForm ? 'Cancel' : 'Join Trip'}
+                {showJoinForm ? 'Cancel' : 'Join Trip'}
               </button>
             </div>
           </div>
@@ -217,7 +234,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {showNewTripForm && (
+          {showCreateForm && (
             <div className="mb-8 bg-white shadow sm:rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Create New Trip</h2>
               <form onSubmit={handleCreateTrip} className="space-y-4">
@@ -228,8 +245,8 @@ export default function Dashboard() {
                   <input
                     id="tripName"
                     type="text"
-                    value={newTripName}
-                    onChange={(e) => setNewTripName(e.target.value)}
+                    value={tripName}
+                    onChange={(e) => setTripName(e.target.value)}
                     placeholder="e.g., Summer Vacation 2024"
                     required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
@@ -242,8 +259,8 @@ export default function Dashboard() {
                   <input
                     id="tripPassword"
                     type="password"
-                    value={newTripPassword}
-                    onChange={(e) => setNewTripPassword(e.target.value)}
+                    value={tripPassword}
+                    onChange={(e) => setTripPassword(e.target.value)}
                     placeholder="This will be used by others to join your trip"
                     required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
@@ -252,17 +269,17 @@ export default function Dashboard() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={isCreatingTrip || !newTripName.trim() || !newTripPassword.trim()}
+                    disabled={isCreating || !tripName.trim() || !tripPassword.trim()}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreatingTrip ? 'Creating...' : 'Create Trip'}
+                    {isCreating ? 'Creating...' : 'Create Trip'}
                   </button>
                 </div>
               </form>
             </div>
           )}
 
-          {showJoinTripForm && (
+          {showJoinForm && (
             <div className="mb-8 bg-white shadow sm:rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Join Existing Trip</h2>
               <form onSubmit={handleJoinTrip} className="space-y-4">
@@ -273,8 +290,8 @@ export default function Dashboard() {
                   <input
                     id="joinTripId"
                     type="text"
-                    value={joinTripId}
-                    onChange={(e) => setJoinTripId(e.target.value)}
+                    value={tripId}
+                    onChange={(e) => setTripId(e.target.value)}
                     placeholder="Enter the Trip ID shared with you"
                     required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
@@ -287,8 +304,8 @@ export default function Dashboard() {
                   <input
                     id="joinTripPassword"
                     type="password"
-                    value={joinTripPassword}
-                    onChange={(e) => setJoinTripPassword(e.target.value)}
+                    value={joinPassword}
+                    onChange={(e) => setJoinPassword(e.target.value)}
                     placeholder="Enter the Trip Password"
                     required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
@@ -297,23 +314,25 @@ export default function Dashboard() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={isJoiningTrip || !joinTripId.trim() || !joinTripPassword.trim()}
+                    disabled={isJoining || !tripId.trim() || !joinPassword.trim()}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isJoiningTrip ? 'Joining...' : 'Join Trip'}
+                    {isJoining ? 'Joining...' : 'Join Trip'}
                   </button>
                 </div>
               </form>
             </div>
           )}
 
-          {isLoading ? (
+          {loading ? (
             <div className="bg-white shadow overflow-hidden sm:rounded-md p-6 text-center">
               <p className="text-gray-500">Loading your trips...</p>
             </div>
           ) : trips.length === 0 ? (
             <div className="bg-white shadow overflow-hidden sm:rounded-md p-6 text-center">
-              <p className="text-gray-500">You don't have any trips yet.</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">You don&apos;t have any trips yet.</p>
+              </div>
               <p className="text-sm text-gray-400 mt-2">Create a new trip or join an existing one to get started.</p>
             </div>
           ) : (
