@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { useEffect } from "react";
+// import { useRouter } from 'next/navigation';
+// import { useEffect } from "react";
 
 export default function Home() {
-  const { isSignedIn, isLoaded } = useUser();
-  const router = useRouter();
+  const { isSignedIn } = useUser();
+  // const router = useRouter();
   
   // Redirect to dashboard if already signed in
   // useEffect(() => {
