@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       
       if (!existingUser) {
         // Create a new user in our database
-        await createUser(displayName);
+        await createUser(displayName, id);
         console.log(`Created user ${displayName} in the database`);
       } else {
         console.log(`User ${displayName} already exists in the database`);
